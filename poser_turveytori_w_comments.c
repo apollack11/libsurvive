@@ -1,3 +1,4 @@
+// QUESTION: Do we need all of these?
 #include <survive.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -15,8 +16,9 @@
 #endif
 
 
-#define PointToFlts(x) ((FLT*)(x))
+#define PointToFlts(x) ((FLT*)(x)) // XXX: this is never used
 
+// defines a struct of three floats that make up a point
 typedef struct
 {
 	FLT x;
@@ -24,6 +26,7 @@ typedef struct
 	FLT z;
 } Point;
 
+// QUESTION: what is this used for?
 void writePoint(FILE *file, double x, double y, double z, unsigned int rgb) {}
 void updateHeader(FILE * file) {}
 void writeAxes(FILE * file) {}
@@ -32,6 +35,7 @@ void writePcdHeader(FILE * file) {}
 void writePointCloud(FILE *f, Point *pointCloud, unsigned int Color) {}
 void markPointWithStar(FILE *file, Point point, unsigned int color) {}
 
+// QUESTION: what is this used for?
 typedef struct
 {
 	Point point; // location of the sensor on the tracked object;
@@ -40,6 +44,7 @@ typedef struct
 	double phi; // "vertical" angular measurement from lighthouse in radians.
 } TrackedSensor;
 
+// QUESTION: what is this used for?
 typedef struct
 {
 	size_t numSensors;
@@ -47,12 +52,15 @@ typedef struct
 } TrackedObject;
 
 
+// defining PI as a constant
 #ifndef M_PI
 #define M_PI 3.14159265358979323846264338327
 #endif
 
+// defining SQUARED as a function
 #define SQUARED(x) ((x)*(x))
 
+// an easy way to create red, green, and blue to be passed to GUI (QUESTION?)
 typedef union
 {
 	struct
@@ -65,15 +73,17 @@ typedef union
 	uint32_t long_value;
 } RGBValue;
 
+// uses RGBValue to define red, green, and blue
 static RGBValue RED = { .Red = 255,.Green = 0,.Blue = 0,.Alpha = 125 };
 static RGBValue GREEN = { .Red = 0,.Green = 255,.Blue = 0,.Alpha = 125 };
 static RGBValue BLUE = { .Red = 0,.Green = 0,.Blue = 255,.Alpha = 125 };
 
-static const double WORLD_BOUNDS = 100;
-#define MAX_TRACKED_POINTS 40
+static const double WORLD_BOUNDS = 100; // XXX: this is never used
+#define MAX_TRACKED_POINTS 40 // XXX: this is never used
 
-static const float DefaultPointsPerOuterDiameter = 60;
+static const float DefaultPointsPerOuterDiameter = 60; // XXX: this is never used
 
+// QUESTION: what is this used for?
 typedef struct
 {
 	FLT down[3];  // populated by the IMU for posing
@@ -93,7 +103,7 @@ typedef struct
 
 
 
-
+// returns the distance between two points in 3D space
 static FLT distance(Point a, Point b)
 {
 	FLT x = a.x - b.x;
@@ -102,6 +112,7 @@ static FLT distance(Point a, Point b)
 	return FLT_SQRT(x*x + y*y + z*z);
 }
 
+// QUESTION: what is this used for?
 Matrix3x3 GetRotationMatrixForTorus(Point a, Point b)
 {
 	Matrix3x3 result;
@@ -119,6 +130,8 @@ Matrix3x3 GetRotationMatrixForTorus(Point a, Point b)
 	return result;
 }
 
+// stores information about two points including angle between them, rotation matrix, inverse rotation matrix (QUESTION: where is this used?)
+// instance: pna
 typedef struct
 {
 	Point a;
@@ -131,7 +144,7 @@ typedef struct
 	char bi;
 } PointsAndAngle;
 
-
+// rotates and translates point in 3D space
 Point RotateAndTranslatePoint(Point p, Matrix3x3 rot, Point newOrigin)
 {
 	Point q;
@@ -144,6 +157,8 @@ Point RotateAndTranslatePoint(Point p, Matrix3x3 rot, Point newOrigin)
 	return q;
 }
 
+// XXX: this is never used
+// QUESTION: would this be potentially useful??
 double angleFromPoints(Point p1, Point p2, Point center)
 {
 	Point v1, v2, v1norm, v2norm;
@@ -172,6 +187,7 @@ double angleFromPoints(Point p1, Point p2, Point center)
 	return angle;
 }
 
+// calculates midpoint of two points
 Point midpoint(Point a, Point b)
 {
 	Point m;
@@ -182,6 +198,7 @@ Point midpoint(Point a, Point b)
 	return m;
 }
 
+// TODO: analyze this more, what is it being used for exactly?
 // What we're doing here is:
 // * Given a point in space
 // * And points and a lighthouse angle that implicitly define a torus
@@ -308,8 +325,12 @@ void estimateToroidalAndPoloidalAngleOfPoint(
 	return;
 }
 
+// QUESTION: what defines this?
+// everyone has this defined as 100
 #define MAX_POINT_PAIRS 100
 
+// finds the angle between two sensors
+// I assume this means sensors that are part of the tracker? (QUESTION)
 FLT angleBetweenSensors(TrackedSensor *a, TrackedSensor *b)
 {
 	FLT angle = FLT_ACOS(FLT_COS(a->phi - b->phi)*FLT_COS(a->theta - b->theta));
@@ -318,6 +339,7 @@ FLT angleBetweenSensors(TrackedSensor *a, TrackedSensor *b)
 	return angle;
 }
 
+// XXX: Not currently being used, he claims it's faster?
 // This provides a pretty good estimate of the angle above, probably better
 // the further away the lighthouse is.  But, it's not crazy-precise.
 // It's main advantage is speed.
@@ -332,6 +354,7 @@ FLT pythAngleBetweenSensors2(TrackedSensor *a, TrackedSensor *b)
 	return pythAngle;
 }
 
+// not sure what all this torus stuff is, gonna have to figure that out before I know what this does (QUESTION)
 Point calculateTorusPointFromAngles(PointsAndAngle *pna, FLT toroidalSin, FLT toroidalCos, FLT poloidalAngle, FLT poloidalSin)
 {
 	Point result;
@@ -351,6 +374,8 @@ Point calculateTorusPointFromAngles(PointsAndAngle *pna, FLT toroidalSin, FLT to
 	return result;
 }
 
+// QUESTION: what does this do? what is a fitness point?
+// he's fudging something here which may be a huge problem
 FLT getPointFitnessForPna(Point pointIn, PointsAndAngle *pna)
 {
 
@@ -386,6 +411,8 @@ FLT getPointFitnessForPna(Point pointIn, PointsAndAngle *pna)
 	return dist;
 }
 
+// QUESTION: what is this used for?
+// returns 1 if a is greater than b, -1 if b is greater than a
 int compareFlts(const void * a, const void * b)
 {
 	FLT a2 = *(const FLT*)a;
@@ -393,6 +420,7 @@ int compareFlts(const void * a, const void * b)
 	return (a2 > b2) - (a2 < b2);
 }
 
+// QUESTION: again what does fitness mean??
 FLT getPointFitness(Point pointIn, PointsAndAngle *pna, size_t pnaCount, int deubgPrint)
 {
 	FLT fitness;
@@ -434,6 +462,7 @@ FLT getPointFitness(Point pointIn, PointsAndAngle *pna, size_t pnaCount, int deu
 	return 1 / FLT_SQRT(resultSum);
 }
 
+// QUESTION: I have no idea what this is doing
 // TODO: Use a central point instead of separate "minus" points for each axis.  This will reduce
 // the number of fitness calls by 1/3.
 Point getGradient(Point pointIn, PointsAndAngle *pna, size_t pnaCount, FLT precision)
@@ -478,6 +507,7 @@ Point getNormalizedAndScaledVector(Point vectorIn, FLT desiredMagnitude)
 	return result;
 }
 
+// XXX: this is not used anywhere, probably because it's the same as midpoint
 Point getAvgPoints(Point a, Point b)
 {
 	Point result;
@@ -487,7 +517,7 @@ Point getAvgPoints(Point a, Point b)
 	return result;
 }
 
-
+// QUESTION: he's using gradient descent, but why?
 // This is modifies the basic gradient descent algorithm to better handle the shallow valley case,
 // which appears to be typical of this convergence.
 static Point RefineEstimateUsingModifiedGradientDescent1(Point initialEstimate, PointsAndAngle *pna, size_t pnaCount, FILE *logFile)
@@ -1170,6 +1200,8 @@ static Point SolveForLighthouse(FLT posOut[3], FLT quatOut[4], TrackedObject *ob
 	//	printf("obj->sensor[%d].phi = %f;\n", i, obj->sensor[i].phi);
 	//	printf("obj->sensor[%d].theta = %f;\n\n", i, obj->sensor[i].theta);
 	//}
+
+	// create array of PointsAndAngle's
 	PointsAndAngle pna[MAX_POINT_PAIRS];
 
 	volatile size_t sizeNeeded = sizeof(pna);
@@ -1431,7 +1463,7 @@ static Point SolveForLighthouse(FLT posOut[3], FLT quatOut[4], TrackedObject *ob
 static void QuickPose(SurviveObject *so, int lh)
 {
 
-
+	// get the poser data from SurviveObject
 	ToriData * td = so->PoserData;
 
 	if (! so->ctx->bsd[lh].PositionSet)
@@ -1463,6 +1495,8 @@ static void QuickPose(SurviveObject *so, int lh)
 
 	TrackedObject *to;
 
+	// allocate memory for the TrackedObject based on the number of TrackedSensors
+	// SENSORS_PER_OBJECT is set to 32 in survive_types.h
 	to = malloc(sizeof(TrackedObject) + (SENSORS_PER_OBJECT * sizeof(TrackedSensor)));
 
 	{
@@ -1475,13 +1509,20 @@ static void QuickPose(SurviveObject *so, int lh)
 		//quatfrom2vectors(downQuat, td->down, negZ);
 		//// end TODO
 
-
+		// so->nr_locations is the number of sensors on the current device
+		// should be 22 for the Vive Tracker
 		for (int i = 0; i < so->nr_locations; i++)
 		{
+			// td->angleIndex[lh][0 or 1] angleIndex for each axis of the given lighthouse
+			// OLD_ANGLES_BUFF_LEN is 3
 			int angleIndex0 = (td->angleIndex[lh][0] + 1 + OLD_ANGLES_BUFF_LEN) % OLD_ANGLES_BUFF_LEN;
 			int angleIndex1 = (td->angleIndex[lh][1] + 1 + OLD_ANGLES_BUFF_LEN) % OLD_ANGLES_BUFF_LEN;
+
+			// td->oldAngles gives the angle seen by a sensor given [sensor_id][axis][lh][angleIndex]
+			// check if the sensor has an estimated angle not equal to 0
 			if (td->oldAngles[i][0][lh][angleIndex0] != 0 && td->oldAngles[i][1][lh][angleIndex1] != 0)
 			{
+				// get the normal vector and x,y,z location of current sensor
 				FLT norm[3] = { so->sensor_normals[i * 3 + 0] , so->sensor_normals[i * 3 + 1] , so->sensor_normals[i * 3 + 2] };
 				FLT point[3] = { so->sensor_locations[i * 3 + 0] , so->sensor_locations[i * 3 + 1] , so->sensor_locations[i * 3 + 2] };
 
@@ -1489,6 +1530,8 @@ static void QuickPose(SurviveObject *so, int lh)
 				//quatrotatevector(norm, downQuat, norm);
 				//quatrotatevector(point, downQuat, point);
 
+				// store normal vector and location in TrackedObject
+				// each sensor that sees something has information stored
 				to->sensor[sensorCount].normal.x = norm[0];
 				to->sensor[sensorCount].normal.y = norm[1];
 				to->sensor[sensorCount].normal.z = norm[2];
@@ -1498,18 +1541,14 @@ static void QuickPose(SurviveObject *so, int lh)
 				to->sensor[sensorCount].theta = td->oldAngles[i][0][lh][angleIndex0] + LINMATHPI / 2; // lighthouse 0, angle 0 (horizontal)
 				to->sensor[sensorCount].phi = td->oldAngles[i][1][lh][angleIndex1] + LINMATHPI / 2; // lighthouse 0, angle 1 (vertical)
 
-				// printf("%2d: %8.8f, %8.8f   \n",
-				// 	i,
-				// 	to->sensor[sensorCount].theta,
-				// 	to->sensor[sensorCount].phi
-				// 	);
-
-
 				sensorCount++;
 			}
 		}
+		// sensorCount is the number of sensors that did not have an angle of 0
+		// store this in the TrackedObject
 		to->numSensors = sensorCount;
 
+		// if the number of sensors that see something is greater than 4, continue
 		if (sensorCount > 4)
 		{
 			FLT pos[3], quat[4];
@@ -1530,21 +1569,16 @@ static void QuickPose(SurviveObject *so, int lh)
 			//	SolveForLighthouse(pos, quat, to, so, 0, lh, 0);
 			//}
 
-
-
-
+			// call SolveForLighthouse
 			SolveForLighthouse(pos, quat, to, so, 0, lh, 0);
 			printf("!\n");
 		}
 
-
 	}
-
 
 	free(to);
 
 }
-
 
 
 int PoserTurveyTori( SurviveObject * so, PoserData * poserData )

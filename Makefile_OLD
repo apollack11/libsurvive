@@ -2,12 +2,10 @@ all : lib data_recorder test calibrate calibrate_client
 
 CC:=gcc
 
+
 CFLAGS:=-Iinclude/libsurvive -I. -fPIC -g -O3 -Iredist -flto -DUSE_DOUBLE -std=gnu99 -rdynamic
 #LDFLAGS:=-L/usr/local/lib -lpthread -lusb-1.0 -lz -lm -flto -g
 LDFLAGS:=-L/usr/local/lib -lpthread -lz -lm -flto -g
-
-	# `pkg-config opencv --cflags`
-	#  `pkg-config opencv --libs`
 
 #----------
 # Platform specific changes to CFLAGS/LDFLAGS
@@ -34,7 +32,7 @@ GRAPHICS_LOFI:=redist/CNFGFunctions.o redist/CNFGXDriver.o
 endif
 
 
-POSERS:=src/poser_dummy.o src/poser_daveortho.o src/poser_charlesslow.o src/poser_octavioradii.o src/poser_turveytori.o src/poser_pollackradii.o src/poser_pollackpnp.o
+POSERS:=src/poser_dummy.o src/poser_daveortho.o src/poser_charlesslow.o src/poser_octavioradii.o src/poser_turveytori.o src/poser_pollackradii.o
 REDISTS:=redist/json_helpers.o redist/linmath.o redist/jsmn.o redist/os_generic.o
 ifeq ($(UNAME), Darwin)
 REDISTS:=$(REDISTS) redist/hid-osx.c
@@ -63,6 +61,7 @@ LIBSURVIVE_O:=$(POSERS) $(REDISTS) $(LIBSURVIVE_CORE)
 LIBSURVIVE_C:=$(LIBSURVIVE_O:.o=.c)
 
 # unused: redist/crc32.c
+
 testCocoa : testCocoa.c $(DRAWFUNCTIONS)
 	$(CC) -o $@ $^ $(LDFLAGS) $(CFLAGS)
 
@@ -72,7 +71,7 @@ test : test.c ./lib/libsurvive.so redist/os_generic.o
 data_recorder : data_recorder.c ./lib/libsurvive.so redist/os_generic.c $(DRAWFUNCTIONS)
 	$(CC) -o $@ $^ $(LDFLAGS) $(CFLAGS)
 
-calibrate :  calibrate.c ./lib/libsurvive.so ./lib/posecalc.so redist/os_generic.c $(DRAWFUNCTIONS)
+calibrate :  calibrate.c ./lib/libsurvive.so redist/os_generic.c $(DRAWFUNCTIONS)
 	$(CC) -o $@ $^ $(LDFLAGS) $(CFLAGS)
 
 calibrate_client :  calibrate_client.c ./lib/libsurvive.so redist/os_generic.c $(GRAPHICS_LOFI)
@@ -85,10 +84,7 @@ static_calibrate : calibrate.c redist/os_generic.c $(DRAWFUNCTIONS) $(LIBSURVIVE
 lib:
 	mkdir lib
 
-lib/posecalc.so : opencv_pose_calc.cpp
-	g++ -o $@ $^ `pkg-config opencv --cflags --libs` -shared -fPIC
-
-lib/libsurvive.so : $(LIBSURVIVE_O) ./lib/posecalc.so
+lib/libsurvive.so : $(LIBSURVIVE_O)
 	$(CC) -o $@ $^ $(LDFLAGS) -shared
 
 
@@ -96,4 +92,4 @@ calibrate_tcc : $(LIBSURVIVE_C)
 	tcc -DRUNTIME_SYMNUM $(CFLAGS) -o $@ $^ $(LDFLAGS) calibrate.c redist/os_generic.c $(DRAWFUNCTIONS) redist/symbol_enumerator.c
 
 clean :
-	rm -rf *.o src/*.o *~ src/*~ test data_recorder calibrate testCocoa lib/libsurvive.so lib/posecalc.so redist/*.o redist/*~
+	rm -rf *.o src/*.o *~ src/*~ test data_recorder calibrate testCocoa lib/libsurvive.so redist/*.o redist/*~
